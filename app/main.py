@@ -99,7 +99,6 @@ def delete_post(post_id:str,req:Request):
     if verify_token:
         ps = Post()
         delete_post = ps.delete_post(post_id)
-        print(delete_post,"============================")
         if delete_post:
             return {"status_code":HTTPStatus.OK,
                             "message":"deleted post sucessfully"}
