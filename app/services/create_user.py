@@ -1,4 +1,5 @@
-from app.connection import Connection
+from connection import Connection
+from auth import decrypt_password
 
 class User:
     def __init__(self, username:str|None=None,password:str|None = None,
@@ -11,18 +12,15 @@ class User:
     
     def create_user(self):
         cursor = self.conn.open_connection()
-        SQL = ("INSERT INTO user_details(username,email_id,password,phone_no) VALUES (?, ?, ?, ?)"\
-                ,(self._username,self._email_id,self.__password,self._phone_no))
-        cursor.execute(SQL)
-        cursor.commit()
-        cursor.close()
+        SQL = cursor.execute("INSERT INTO user_details(username,email_id,password,phone_no) VALUES (?, ?, ?, ?)",(self._username,self._email_id,self.__password,self._phone_no))
+        self.conn.close_connection()
 
     def authenicate_user(self):
         cursor = self.conn.open_connection()
-        creds_check  = cursor.execute("select username from user_details where username={0}\
-                       and password={1}".format(self._username,self.__password)).fetchone()
-        cursor.close()
-        return True if creds_check else False
+        creds_check  = cursor.execute('''select password from user_details where username="{0}"'''.format(self._username)).fetchone()
+        user_password = decrypt_password(creds_check[0])
+        self.conn.close_connection()
+        return user_password == self.__password
             
     def delete_user(self):
         cursor = self.conn.open_connection()
