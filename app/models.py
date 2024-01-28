@@ -7,14 +7,12 @@ class CreateUser(BaseModel):
     password : str
 
 class Userlogin(BaseModel):
-    email : str
+    username : str
     password : str
 
 class CreatePost(BaseModel):
-    post_id : str
     topic : str
     content : str
-    timestamp : str
 
 
 

@@ -1,11 +1,11 @@
 import hashlib
 from http import HTTPStatus
 
-from fastapi import FastAPI,Response
+from fastapi import FastAPI,Response,HTTPException,Request
 from models import CreatePost, CreateUser, Userlogin
 from services.create_user import User
-from auth import encrypt_password
-
+from services.create_post import Post
+from auth import create_jwt_token, encrypt_password,verify_access_token
 
 app = FastAPI()
 
@@ -35,48 +35,106 @@ def user_login(login_user:Userlogin):
     We will validate the password and username
     along with the tokenization.
     '''
-    pass
+    if not login_user.username or not login_user.password:
+        return Response(status_code=HTTPStatus.BAD_REQUEST,message="user_name or password is not given")
+    usr = User(login_user.username,login_user.password)
+    if not usr.authenicate_user():
+         raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            message="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_jwt_token(data={"sub":login_user.username})
+    return {"jwt_token": access_token, "token_type": "bearer"}
+
 
 @app.post("/{username}/Createpost")
-def create_post(username:str,post:CreatePost):
+def create_post(username:str,post:CreatePost,authorization_token:str):
     '''
     we will create a post based on text content
     and then store it in db.
     '''
-    pass
+    if not username:
+        return Response(status_code=HTTPStatus.BAD_REQUEST,
+                        message="username empty")
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        if post.content or post.topic:
+            return Response(status_code=HTTPStatus.BAD_REQUEST,
+                            message="either post content or post topic is missing !")
+        pst = Post(username,post.content)
+        pst.create_post()
+        return Response(status_code=HTTPStatus.OK,message="SuccessFully created the post")  
+    return Response(status_code=HTTPStatus.BAD_REQUEST,message="please check the credentials")
 
 @app.get("/listuser")
 def list_users():
-    '''
-    We will list out the users.
-    '''
+    '''I didnt have clarity regarding this so i left uncoded.'''
     pass
 
 @app.get("/{username}/listpost")
-def list_post(username:str):
+def list_post(req:Request):
     '''
     we will list out all the posts done by user.
     '''
-    pass
+    authorization_token = req.headers["Authorization"]
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        ps = Post()
+        post_list = ps.list_post()
+        return Response(status_code=HTTPStatus.OK,
+                        message=post_list)
+    return Response(status_code=HTTPStatus.BAD_REQUEST,message="please check the credentials")
 
 @app.delete("/{post_id}/deletepost")
-def delete_post(post_id:str):
+def delete_post(post_id:str,req:Request):
     '''
     we will be deleting the given post id.
     '''
-    pass
+    authorization_token = req.headers["Authorization"]
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        ps = Post()
+        delete_post = ps.delete_post()
+        if delete_post:
+            return Response(status_code=HTTPStatus.OK,
+                            message="deleted post sucessfully")
+    return Response(status_code=HTTPStatus.BAD_REQUEST,message="please check the credentials and required parameters")
+    
 
 @app.put("/{post_id}/updatepost")
-def update_post(post_id:str):
+def update_post(post_id:str,req:Request,updated_content:str):
     '''
     we will update the post given post_id and body.
     '''
-    pass
+    authorization_token = req.headers["Authorization"]
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        ps = Post()
+        update_post = ps.update_post(updated_content,post_id)
+        if update_post:
+            return Response(status_code=HTTPStatus.OK,
+                            message="updated post sucessfully")
+    return Response(status_code=HTTPStatus.BAD_REQUEST,message="please check the credentials and required parameters")
 
 @app.get("/{username}/deleteuser")
-def delete_user(username:str):
+def delete_user(username:str,password:str,req:Request):
     '''
     we will be deleting the particular user.
     '''
-    pass
+
+    authorization_token = req.headers["Authorization"]
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        usr = User(username)
+        delete_user = usr.delete_user()
+        if delete_user:
+            return Response(status_code=HTTPStatus.OK,
+                            message="delete user sucessfully")
+    return Response(status_code=HTTPStatus.BAD_REQUEST,message="please check the credentials and required parameters")
+        
+    
+
+
+
 

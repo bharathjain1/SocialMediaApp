@@ -1,7 +1,7 @@
 from app.connection import Connection
 
 class Post:
-    def __init__(self,username,postcontent={}):
+    def __init__(self,username=None,postcontent={}):
         self._username = username
         self._postcontent = postcontent
         self.conn = Connection()
@@ -20,14 +20,14 @@ class Post:
         cursor.close()
         return post_list if post_list else {}
 
-    def delete_post(self):
+    def delete_post(self,post_id):
         cursor = self.conn.open_connection()
-        delete_user = cursor.execute("delete from user_post where username = {0}".format(self._username)).fetchone()
+        delete_user = cursor.execute("delete from user_post where post_id = {0}".format(post_id)).fetchone()
         cursor.close()
-        return "Success" if delete_user else None
+        return True if delete_user else False
 
-    def update_post(self,updated_content):
+    def update_post(self,updated_content,post_id):
         cursor = self.conn.open_connection()
-        update_post = cursor.execute("update user_post set post_content={0} where username={1}"\
-                                     .format(updated_content,self._username)).fetchone()
+        update_post = cursor.execute("update user_post set post_content={0} where post_id={1}"\
+                                     .format(updated_content,post_id)).fetchone()
         return True if update_post else False

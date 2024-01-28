@@ -1,7 +1,7 @@
 from app.connection import Connection
 
 class User:
-    def __init__(self, username:str,password:str,
+    def __init__(self, username:str|None=None,password:str|None = None,
                 email:str|None=None,phone_no:int|None=None):
         self._username = username
         self._email_id = email
@@ -17,14 +17,13 @@ class User:
         cursor.commit()
         cursor.close()
 
-    def login_user(self):
+    def authenicate_user(self):
         cursor = self.conn.open_connection()
         creds_check  = cursor.execute("select username from user_details where username={0}\
                        and password={1}".format(self._username,self.__password)).fetchone()
-        if creds_check:
-            pass
         cursor.close()
-
+        return True if creds_check else False
+            
     def delete_user(self):
         cursor = self.conn.open_connection()
         delete_user = cursor.execute("delete from user_details where username = {0}".format(self._username)).fetchone()
