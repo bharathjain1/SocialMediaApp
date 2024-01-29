@@ -49,7 +49,7 @@ def user_login(login_user:Userlogin):
     return {"jwt_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/{username}/Createpost")
+@app.post("/Createpost")
 def create_post(post:CreatePost,authorization_token:str):
     '''
     we will create a post based on text content
@@ -70,21 +70,29 @@ def create_post(post:CreatePost,authorization_token:str):
     return {"status_code":HTTPStatus.BAD_REQUEST,
             "message":"please check the credentials"}
 
-# @app.get("/listuser")
-# def list_users():
-#     pass
+@app.get("/listuser")
+def list_users(req:Request,limit:int):
+    '''We will be listing the existing users'''
+    authorization_token = req.headers["Authorization"]
+    verify_token = verify_access_token(authorization_token)
+    if verify_token:
+        usr = User()
+        user_list = usr.list_users(limit)
+        return {"status_code":HTTPStatus.OK,
+                        "message":user_list}
+    return {"status_code":HTTPStatus.BAD_REQUEST,"message":"please check the credentials"}
+        
 
 @app.get("/listpost")
-def list_post(req:Request):
+def list_post(req:Request,limit:int):
     '''
     we will list out all the posts done by user.
     '''
-    
     authorization_token = req.headers["Authorization"]
     verify_token = verify_access_token(authorization_token)
     if verify_token:
         ps = Post()
-        post_list = ps.list_post()
+        post_list = ps.list_post(limit)
         return {"status_code":HTTPStatus.OK,
                         "message":post_list}
     return {"status_code":HTTPStatus.BAD_REQUEST,"message":"please check the credentials"}
@@ -120,7 +128,7 @@ def update_post(post_id:str,req:Request,updated_content:str):
                     "message":"updated post sucessfully"}
     return {"status_code":HTTPStatus.BAD_REQUEST,"message":"please check the credentials and required parameters"}
 
-@app.get("/{username}/deleteuser")
+@app.delete("/{username}/deleteuser")
 def delete_user(username:str,password:str,req:Request):
     '''
     we will be deleting the particular user.

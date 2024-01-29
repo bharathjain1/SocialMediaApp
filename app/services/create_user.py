@@ -24,8 +24,15 @@ class User:
             
     def delete_user(self):
         cursor = self.conn.open_connection()
-        delete_user = cursor.execute("delete from user_details where username = {0}".format(self._username)).fetchone()
-        if delete_user:
-            return "Success"
-        cursor.close()
-        return None
+        delete_user = cursor.execute('''delete from user_details where username = "{0}"'''.format(self._username)).fetchone()
+        self.conn.close_connection()
+        return True if delete_user else False
+
+    def list_users(self,limit=0):
+        cursor = self.conn.open_connection()
+        if limit:
+            user_list_count = cursor.execute("select username from user_details ORDER BY create_date DESC limit {0}".format(limit)).fetchall()
+        else:
+            user_list_count = cursor.execute("select username from user_details ORDER BY create_date DESC").fetchall()
+        self.conn.close_connection()
+        return user_list_count if user_list_count else False

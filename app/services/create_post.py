@@ -11,9 +11,12 @@ class Post:
         SQL = cursor.execute("INSERT INTO user_post(username,post_content)VALUES(?,?)",(self._username,self._postcontent))
         self.conn.close_connection()
     
-    def list_post(self):
+    def list_post(self,limit=0):
         cursor = self.conn.open_connection()
-        post_list = cursor.execute("select post_content from user_post ORDER BY create_date DESC").fetchall()
+        if limit:
+            post_list = cursor.execute("select post_content from user_post ORDER BY create_date DESC limit {0}".format(limit)).fetchall()
+        else:
+            post_list = cursor.execute("select post_content from user_post ORDER BY create_date DESC ").fetchall()
         self.conn.close_connection()
         return post_list if post_list else {}
 
