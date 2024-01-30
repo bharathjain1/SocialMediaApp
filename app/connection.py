@@ -11,6 +11,3 @@ class Connection:
     def close_connection(self):
         self.conn.commit()
         self.cursor.close()
-
-cc = Connection()
-cc.open_connection()
